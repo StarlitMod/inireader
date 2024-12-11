@@ -1,3 +1,3 @@
 # inireader
 
-https://github.com/compuphase/minIni.git
+https://github.com/compuphase/minIni
