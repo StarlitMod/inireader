@@ -45,62 +45,53 @@ public:
 		return std::string(buffer);
 	}
 
-	int WriteInteger(const std::string& section, const std::string& key, int value)
+	bool WriteInteger(const std::string& section, const std::string& key, int value)
 	{
-		return ini_putl(section.c_str(), key.c_str(), value, m_szFileName.c_str());
+		return ini_putl(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
 	}
 
-	int WriteFloat(const std::string& section, const std::string& key, float value)
+	bool WriteFloat(const std::string& section, const std::string& key, float value)
 	{
-		return ini_putf(section.c_str(), key.c_str(), value, m_szFileName.c_str());
+		return ini_putf(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
 	}
 
-	int WriteBoolean(const std::string& section, const std::string& key, bool value)
+	bool WriteBoolean(const std::string& section, const std::string& key, bool value)
 	{
-		return ini_putbool(section.c_str(), key.c_str(), value, m_szFileName.c_str());
+		return ini_putbool(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
 	}
 
-	int WriteString(const std::string& section, const std::string& key, const std::string& value)
+	bool WriteString(const std::string& section, const std::string& key, const std::string& str)
 	{
-		return ini_puts(section.c_str(), key.c_str(), value.c_str(), m_szFileName.c_str());
-	}
-
-	bool Exists(const std::string& section, const std::string& key)
-	{
-		return ini_haskey(section.c_str(), key.c_str(), m_szFileName.c_str()) == 1 ? true : false;
+		return ini_puts(section.c_str(), key.c_str(), str.c_str(), m_szFileName.c_str()) != 0 ? true : false;
 	}
 
 	template <typename T>
-	int Read(const std::string& section, const std::string& key, T& value)
+	T Read(const std::string& section, const std::string& key, const T& default_value)
 	{
 		if (std::is_same<T, int>::value)
 		{
-			value = ReadInteger(section, key);
-			return 1;
+			return ReadInteger(section, key, default_value);
 		}
 		else if (std::is_same<T, float>::value)
 		{
-			value = ReadFloat(section, key);
-			return 1;
+			return ReadFloat(section, key, default_value);
 		}
 		else if (std::is_same<T, bool>::value)
 		{
-			value = ReadBoolean(section, key);
-			return 1;
+			return ReadBoolean(section, key, default_value);
 		}
 		else if (std::is_same<T, std::string>::value)
 		{
-			value = ReadString(section, key);
-			return 1;
+			return ReadString(section, key, default_value);
 		}
 		else
 		{
-			return 0;
+			return default_value;
 		}
 	}
 
 	template <typename T>
-	int Write(const std::string& section, const std::string& key, const T& value)
+	bool Write(const std::string& section, const std::string& key, const T& value)
 	{
 		if (std::is_same<T, int>::value)
 		{
@@ -120,13 +111,13 @@ public:
 		}
 		else
 		{
-			return 0;
+			return false;
 		}
 	}
 
 	template <typename T>
-	int operator()(const std::string& section, const std::string& key, const T& value)
+	void operator()(const std::string& section, const std::string& key, const T& value)
 	{
-		return Write<T>(section, key, value);
+		Write<T>(section, key, value);
 	}
 };
