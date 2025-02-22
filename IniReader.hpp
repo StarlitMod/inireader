@@ -1,22 +1,93 @@
 #pragma once
+#include <fstream>
 #include <string>
 #include <type_traits>
+
 #include "minIni.h"
 
-class IniReader
+class IniWriter
 {
+	friend class IniReader;
 private:
 	std::string m_szFileName;
 
 public:
-	IniReader() = default;
-	~IniReader() = default;
+	IniWriter() = default;
+	~IniWriter() = default;
 
-	IniReader(const std::string& filename)
+	IniWriter(const std::string& filename)
 	{
 		m_szFileName = filename;
 	}
 
+	virtual void SetFile(const std::string& filename) {};
+
+	bool WriteInteger(const std::string& section, const std::string& key, int value)
+	{
+		return ini_putl(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
+	}
+
+	bool WriteFloat(const std::string& section, const std::string& key, float value)
+	{
+		return ini_putf(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
+	}
+
+	bool WriteBoolean(const std::string& section, const std::string& key, bool value)
+	{
+		return ini_putbool(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
+	}
+
+	bool WriteString(const std::string& section, const std::string& key, const std::string& str)
+	{
+		return ini_puts(section.c_str(), key.c_str(), str.c_str(), m_szFileName.c_str()) != 0 ? true : false;
+	}
+
+	template <typename T>
+	bool Write(const std::string& section, const std::string& key, const T& value)
+	{
+		if constexpr (std::is_same_v<T, bool> && sizeof(T) == 1)
+		{
+			return WriteBoolean(section, key, value);
+		}
+		else if constexpr (std::is_integral_v<T>)
+		{
+			return WriteInteger(section, key, value);
+		}
+		else if constexpr (std::is_floating_point_v<T>)
+		{
+			return WriteFloat(section, key, value);
+		}
+		else if constexpr (std::is_same_v<T, std::string>)
+		{
+			return WriteString(section, key, value);
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	template <typename T>
+	void operator()(const std::string& section, const std::string& key, const T& value)
+	{
+		Write<T>(section, key, value);
+	}
+
+	void WriteText(const std::string& text)
+	{
+		std::ofstream file(m_szFileName, std::ios::out | std::ios::app);
+		file << text << std::endl;
+	}
+};
+
+class IniReader : public IniWriter
+{
+public:
+	IniReader(const std::string& filename)
+	{
+		m_szFileName = filename;
+	}
+	
 	void SetFile(const std::string& filename)
 	{
 		m_szFileName = filename;
@@ -44,27 +115,7 @@ public:
 		ini_gets(section.c_str(), key.c_str(), default_value.c_str(), buffer, INI_BUFFERSIZE, m_szFileName.c_str());
 		return std::string(buffer);
 	}
-
-	bool WriteInteger(const std::string& section, const std::string& key, int value)
-	{
-		return ini_putl(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
-	}
-
-	bool WriteFloat(const std::string& section, const std::string& key, float value)
-	{
-		return ini_putf(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
-	}
-
-	bool WriteBoolean(const std::string& section, const std::string& key, bool value)
-	{
-		return ini_putbool(section.c_str(), key.c_str(), value, m_szFileName.c_str()) != 0 ? true : false;
-	}
-
-	bool WriteString(const std::string& section, const std::string& key, const std::string& str)
-	{
-		return ini_puts(section.c_str(), key.c_str(), str.c_str(), m_szFileName.c_str()) != 0 ? true : false;
-	}
-
+	
 	template <typename T>
 	T Read(const std::string& section, const std::string& key, const T& default_value)
 	{
@@ -84,48 +135,9 @@ public:
 		{
 			return ReadString(section, key, default_value);
 		}
-		else if constexpr (std::is_same_v<T, char*>)
-		{
-			return ReadString(section, key, std::string(default_value));
-		}
-		else
+		else 
 		{
 			return default_value;
 		}
-	}
-
-	template <typename T>
-	bool Write(const std::string& section, const std::string& key, const T& value)
-	{
-		if constexpr (std::is_same_v<T, bool> && sizeof(T) == 1)
-		{
-			return WriteBoolean(section, key, value);
-		}
-		else if constexpr (std::is_integral_v<T>)
-		{
-			return WriteInteger(section, key, value);
-		}
-		else if constexpr (std::is_floating_point_v<T>)
-		{
-			return WriteFloat(section, key, value);
-		}
-		else if constexpr (std::is_same_v<T, std::string>)
-		{
-			return WriteString(section, key, value);
-		}
-		else if constexpr (std::is_same_v<T, char*>)
-		{
-			return WriteString(section, key, std::string(value));
-		}
-		else
-		{
-			return false;
-		}
-	}
-
-	template <typename T>
-	void operator()(const std::string& section, const std::string& key, const T& value)
-	{
-		Write<T>(section, key, value);
 	}
 };
