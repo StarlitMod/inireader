@@ -68,21 +68,25 @@ public:
 	template <typename T>
 	T Read(const std::string& section, const std::string& key, const T& default_value)
 	{
-		if (std::is_same<T, int>::value)
-		{
-			return ReadInteger(section, key, default_value);
-		}
-		else if (std::is_same<T, float>::value)
-		{
-			return ReadFloat(section, key, default_value);
-		}
-		else if (std::is_same<T, bool>::value)
+		if constexpr (std::is_same_v<T, bool> && sizeof(T) == 1)
 		{
 			return ReadBoolean(section, key, default_value);
 		}
-		else if (std::is_same<T, std::string>::value)
+		else if constexpr (std::is_integral_v<T>)
+		{
+			return ReadInteger(section, key, default_value);
+		}
+		else if constexpr (std::is_floating_point_v<T>)
+		{
+			return ReadFloat(section, key, default_value);
+		}
+		else if constexpr (std::is_same_v<T, std::string>)
 		{
 			return ReadString(section, key, default_value);
+		}
+		else if constexpr (std::is_same_v<T, char*>)
+		{
+			return ReadString(section, key, std::string(default_value));
 		}
 		else
 		{
@@ -93,21 +97,25 @@ public:
 	template <typename T>
 	bool Write(const std::string& section, const std::string& key, const T& value)
 	{
-		if (std::is_same<T, int>::value)
-		{
-			return WriteInteger(section, key, value);
-		}
-		else if (std::is_same<T, float>::value)
-		{
-			return WriteFloat(section, key, value);
-		}
-		else if (std::is_same<T, bool>::value)
+		if constexpr (std::is_same_v<T, bool> && sizeof(T) == 1)
 		{
 			return WriteBoolean(section, key, value);
 		}
-		else if (std::is_same<T, std::string>::value)
+		else if constexpr (std::is_integral_v<T>)
+		{
+			return WriteInteger(section, key, value);
+		}
+		else if constexpr (std::is_floating_point_v<T>)
+		{
+			return WriteFloat(section, key, value);
+		}
+		else if constexpr (std::is_same_v<T, std::string>)
 		{
 			return WriteString(section, key, value);
+		}
+		else if constexpr (std::is_same_v<T, char*>)
+		{
+			return WriteString(section, key, std::string(value));
 		}
 		else
 		{

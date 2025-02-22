@@ -1,0 +1,4 @@
+[submodule "minIni"]
+	path = dev
+	url = https://github.com/compuphase/minIni
+	branch=master
